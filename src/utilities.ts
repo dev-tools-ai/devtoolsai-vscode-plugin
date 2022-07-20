@@ -1,27 +1,75 @@
-import * as vscode from 'vscode';
+import path = require("path");
+import open = require('open');
+import axios, { AxiosResponse } from 'axios';
 
-async function verifyKey()
+
+function isSupportedLanguage(langId: string): boolean
 {
-	let key = String(vscode.workspace.getConfiguration('devtoolsai.setup').get('key'));
+	let supportedLanguages = ['python', 'javascript', 'java', 'csharp', 'ruby'];
+	return supportedLanguages.includes(langId);
+}
 
-	if (key.trim() === "")
+function getLightIcon(icon: string): string
+{
+	return path.join(__dirname, '..', 'resources', 'light', icon);
+}
+
+function getDarkIcon(icon: string): string
+{
+	return path.join(__dirname, '..', 'resources', 'dark', icon);
+}
+
+function openExternalUrl(url: string): void
+{
+	open(url);
+}
+
+async function getRequest(url: string, config: object = {}): Promise<AxiosResponse<any, any> | undefined>
+{
+	try
 	{
-		let inputkey = await vscode.window.showInputBox
-		(
-			{
-				prompt: "Please enter your dev tools ai key...",
-				value: ""
-			}
-		);
-
-		if (inputkey !== undefined && inputkey.trim() !== "")
+		let response = await axios.get(url, config);
+		return response;
+	}
+	catch (e: any)
+	{
+		if (axios.isAxiosError(e))
 		{
-			await vscode.workspace.getConfiguration().update('devtoolsai.setup.key', inputkey, vscode.ConfigurationTarget.Global);
+			return e.response;
+		}
+		else
+		{
+			return e;
+		}
+	}
+}
+
+async function postRequest(url: string, data: object, config: object = {}): Promise<AxiosResponse<any, any> | undefined>
+{
+	try
+	{
+		let response = await axios.post(url, data, config);
+		return response;
+	}
+	catch (e: any)
+	{
+		if (axios.isAxiosError(e))
+		{
+			return e.response;
+		}
+		else
+		{
+			return e;
 		}
 	}
 }
 
 export
 {
-	verifyKey
+	isSupportedLanguage,
+	getLightIcon,
+	getDarkIcon,
+	openExternalUrl,
+	getRequest,
+	postRequest
 }

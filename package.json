@@ -1,66 +1,72 @@
 {
   "name": "dev-tools-ai",
   "displayName": "dev tools ai",
-  "description": "Integrate dev tools ai into your IDE experience where it will learns from your tests, so you don't have to update them.",
+  "description": "Integrate dev-tools.ai into your IDE experience where it will learn from your tests, so you don't have to update them.",
   "icon": "resources/logo.png",
   "repository": {
-	  "type": "git",
-	  "url": "https://github.com/kirksl/devtoolsai-vscode-plugin"
+    "type": "git",
+    "url": "https://github.com/dev-tools-ai/devtoolsai-vscode-plugin"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "appInsightsId": "",
   "license": "MIT",
   "author": {
-	"name": "dev tools ai"
+    "name": "dev-tools.ai"
   },
   "publisher": "dev-tools-ai",
   "engines": {
     "vscode": "^1.68.0"
   },
   "categories": [
-	"Programming Languages",
-	"Machine Learning",
-	"Testing",
+    "Programming Languages",
+    "Machine Learning",
+    "Testing",
     "Other"
   ],
   "keywords": [
-	"devtools",
-	"devtools.ai",
-	"smartdriver",
-	"ai",
-	"ml",
-	"artificial intelligence",
-	"machine learning",
-	"testing",
-	"locator",
-	"selector",
-	"selenium",
-	"webdriver",
-	"appium",
-	"cypress",
-	"playwright"
+    "dev tools",
+    "devtools",
+    "devtools.ai",
+    "dev-tools",
+    "dev-tools.ai",
+    "smartdriver",
+    "ai",
+    "ml",
+    "artificial intelligence",
+    "machine learning",
+    "testing",
+    "locator",
+    "selector",
+    "selenium",
+    "webdriver",
+    "appium",
+    "cypress",
+    "playwright"
   ],
   "activationEvents": [
-	"onStartupFinished"
+    "onLanguage:python"
   ],
   "main": "./out/extension.js",
   "capabilities": {
-	"untrustedWorkspaces": {
-		"supported": true
-	}
-},
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
   "contributes": {
-	"configuration": {
-		"title": "dev tools ai",
-		"properties": {
-			"devtoolsai.setup.key": {
-				"type": "string",
-				"default": "",
-				"description": "Your dev tools ai access key",
-				"scope":"resource"
-			}
-		}
-	},
+    "icons": {
+      "dtai-icon-id": {
+        "description": "dev-tools.ai icon",
+        "default": {
+          "fontPath": "./resources/dtai.woff",
+          "fontCharacter": "\\E900"
+        }
+      }
+    },
     "commands": [
+      {
+        "command": "devtoolsai.getKeyFromUser",
+        "title": "Get dev-tools.ai key from user"
+      }
     ]
   },
   "scripts": {
@@ -76,12 +82,17 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "16.x",
     "@types/vscode": "^1.68.0",
-    "@typescript-eslint/eslint-plugin": "^5.27.0",
-    "@typescript-eslint/parser": "^5.27.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
     "@vscode/test-electron": "^2.1.3",
-    "eslint": "^8.16.0",
+    "eslint": "^8.20.0",
     "glob": "^8.0.3",
     "mocha": "^10.0.0",
     "typescript": "^4.7.2"
+  },
+  "dependencies": {
+    "@vscode/extension-telemetry": "^0.4.9",
+    "open": "^8.2.0",
+    "axios": "^0.27.2"
   }
 }
