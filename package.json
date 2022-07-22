@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/dev-tools-ai/devtoolsai-vscode-plugin"
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "appInsightsId": "",
   "license": "MIT",
   "author": {

@@ -1,8 +1,8 @@
-# dev-tools.ai
+# dev tools ai
 
 #### [Repository](https://github.com/dev-tools-ai/devtoolsai-vscode-plugin)&nbsp;&nbsp;|&nbsp;&nbsp;[Issues](https://github.com/dev-tools-ai/devtoolsai-vscode-plugin/issues)&nbsp;&nbsp;|&nbsp;&nbsp;[Milestones](https://github.com/dev-tools-ai/devtoolsai-vscode-plugin/milestones)&nbsp;&nbsp;|&nbsp;&nbsp;[Documentation](https://dev-tools.ai/)
 
-![Badge](https://img.shields.io/visual-studio-marketplace/v/dev-tools-ai.dev-tools-ai) ![Badge](https://img.shields.io/visual-studio-marketplace/last-updated/dev-tools-ai.dev-tools-ai) ![Badge](https://img.shields.io/github/issues/dev-tools-ai/devtoolsai-vscode-plugin)
+![Badge](https://img.shields.io/visual-studio-marketplace/v/devtools-ai.devtools-ai) ![Badge](https://img.shields.io/visual-studio-marketplace/last-updated/devtools-ai.devtools-ai) ![Badge](https://img.shields.io/github/issues/dev-tools-ai/devtoolsai-vscode-plugin)
 
 This extension adds support for `dev-tools.ai` into your IDE experience where it will learn from your tests, so you don't have to update them.
 
