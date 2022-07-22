@@ -1,5 +1,5 @@
 {
-  "name": "dev-tools-ai",
+  "name": "devtools-ai",
   "displayName": "dev tools ai",
   "description": "Integrate dev-tools.ai into your IDE experience where it will learn from your tests, so you don't have to update them.",
   "icon": "resources/logo.png",
@@ -13,7 +13,7 @@
   "author": {
     "name": "dev-tools.ai"
   },
-  "publisher": "dev-tools-ai",
+  "publisher": "devtools-ai",
   "engines": {
     "vscode": "^1.68.0"
   },
