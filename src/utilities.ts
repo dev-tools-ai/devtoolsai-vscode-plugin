@@ -5,7 +5,7 @@ import axios, { AxiosResponse } from 'axios';
 
 function isSupportedLanguage(langId: string): boolean
 {
-	let supportedLanguages = ['python', 'javascript', 'java', 'csharp', 'ruby'];
+	let supportedLanguages = ['python', 'javascript', 'typescript', 'java', 'csharp', 'ruby'];
 	return supportedLanguages.includes(langId);
 }
 
