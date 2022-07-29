@@ -1,9 +1,9 @@
-import * as vscode from 'vscode';
 import ProviderKeyMgmt from "./providerKeyMgmt";
 import ProviderDevToolsAi from './providerDevToolsAi';
 import ProviderLabel from './providerLabel';
 import { ServiceLocalStorage } from './serviceLocalStorage';
 import { isSupportedLanguage, getLightIcon, getDarkIcon } from "./utilities";
+import * as vscode from 'vscode';
 
 interface cachedLabel
 {
@@ -50,6 +50,7 @@ class ProviderDecorations
 		this.triggerUpdateDecorations();
 
 		ProviderKeyMgmt.onVerify(() => { this.triggerUpdateDecorations(); });
+		ProviderDevToolsAi.onServerUpdate(() => { this.triggerUpdateDecorations(); });
 	}
 
 	public updateDecorations()
@@ -77,23 +78,43 @@ class ProviderDecorations
 						let hoverMessage: vscode.MarkdownString = new vscode.MarkdownString(undefined, true);
 						hoverMessage.isTrusted = true;
 
-						console.log("is label tied back to an element in dtai");
+						let getTooltipFooter = async (): Promise<string> =>
+						{
+							const LABEL_DASHBOARD_TOOLTIP = "Label Dashboard";
+							const LABEL_ELEMENT_TOOLTIP = "Label Element";
+							const REFRESH_ELEMENT_TOOLTIP = "Refresh Element";
+							const DELETE_ELEMENT_TOOLTIP = "Delete Element";
+
+							const refreshElementCmd = `command:devtoolsai.refreshElement`;
+							const deleteElementArgs = encodeURIComponent(JSON.stringify([[{ key: key, label: label }]]));
+							const deleteElementCmd = `command:devtoolsai.deleteElement?${deleteElementArgs}`;
+					
+							let footer: string = "\n\n";
+							footer += `[$(dashboard)](${ProviderDevToolsAi.getLabelingDashboardUrl()} "${LABEL_DASHBOARD_TOOLTIP}")`;
+							footer += `&nbsp;&nbsp;[$(tag)](${ProviderDevToolsAi.getLabelingElementUrl(label)} "${LABEL_ELEMENT_TOOLTIP}")`;
+							footer += `&nbsp;&nbsp;[$(refresh)](${refreshElementCmd} "${REFRESH_ELEMENT_TOOLTIP}")`;
+							footer += `&nbsp;&nbsp;[$(trash)](${deleteElementCmd} "${DELETE_ELEMENT_TOOLTIP}")`;
+							footer += `&nbsp;&nbsp;$(kebab-vertical)&nbsp;&nbsp;${await ProviderDevToolsAi.getElementStatus(key, label)}`;
+							return footer;
+						}
+
+						//console.log("is label tied back to an element in dtai");
 						let elementSize = await ProviderDevToolsAi.getElementSize(key, label);
 						if (elementSize && elementSize.status == 200)
 						{
-							console.log("yes: is label in cache");
+							//console.log("yes: is label in cache");
 							let cachedLabel = ServiceLocalStorage.instance.getValue<cachedLabel>(`${key}${label}`);
 							if (cachedLabel)
 							{
-								console.log("yes: label is in cache, is it up to date");
+								//console.log("yes: label is in cache, is it up to date");
 								if (elementSize?.data?.updated_at &&
 									cachedLabel.updated_at == elementSize.data.updated_at)
 								{
-									console.log("yes: cached label is up to date, use cache");
+									console.log(`yes: cached label is up to date, use cache`);
 								}
 								else
 								{
-									console.log("no: cached label is not up to date (update it)");
+									console.log(`no: cached label is not up to date (update it): ${label}`);
 									let elementThumbnail = await ProviderDevToolsAi.getElementThumbnail(key, label);
 									if (elementThumbnail?.data && elementThumbnail.status == 200)
 									{
@@ -109,13 +130,13 @@ class ProviderDecorations
 									}
 									else
 									{
-										console.log("failed to get image, use cache");
+										console.log(`failed to get image, use cache: ${label}`);
 									}
 								}
 							}
 							else
 							{
-								console.log("no: label is not in cache (add it)");
+								console.log(`no: label is not in cache (add it): ${label}`);
 								let elementThumbnail = await ProviderDevToolsAi.getElementThumbnail(key, label);
 								if (elementThumbnail?.data && elementThumbnail.status == 200)
 								{
@@ -133,38 +154,24 @@ class ProviderDecorations
 
 							if (cachedLabel)
 							{
-								console.log("label is in cache, use it");
+								//console.log("label is in cache, use it");
 
-								let getTooltipFooter = (): string =>
-								{
-									const LABELING_DASHBOARD_TOOLTIP = "Label Dashboard";
-									const LABELING_ELEMENT_TOOLTIP = "Label Element";
-									const GITHUB_TOOLTIP = "dev-tools.ai repositories";
-									const EXTENSION_TOOLTIP = "dev-tools.ai VSCode extension";
-							
-									let footer: string = "\n\n";
-									footer += `[$(dashboard)](${ProviderDevToolsAi.getLabelingDashboardUrl()} "${LABELING_DASHBOARD_TOOLTIP}")`;
-									footer += `&nbsp;&nbsp;[$(tag)](${ProviderDevToolsAi.getLabelingElementUrl(label)} "${LABELING_ELEMENT_TOOLTIP}")`;
-									footer += `&nbsp;&nbsp;&nbsp;&nbsp;[$(github)](${ProviderDevToolsAi.getGithubUrl()} "${GITHUB_TOOLTIP}")`;
-									footer += `&nbsp;&nbsp;[$(extensions)](${ProviderDevToolsAi.getVSCodeUrl()} "${EXTENSION_TOOLTIP}")`;
-									return footer;
-								}
-
-								let elementThumbnail = await ProviderDevToolsAi.getElementThumbnail(key, label);
-								let buff = Buffer.from(elementThumbnail.data, 'binary').toString('base64');
+								let buff = Buffer.from(cachedLabel.png, 'binary').toString('base64');
 								hoverMessage.appendMarkdown(`![Element Image](data:image/png;base64,${buff})`);
-								hoverMessage.appendMarkdown(getTooltipFooter());
+								hoverMessage.appendMarkdown(await getTooltipFooter());
 							}
 							else
 							{
 
-								hoverMessage.appendMarkdown(`element not found for label: ${label}`);
+								hoverMessage.appendMarkdown(`Element not found: ${label}`);
+								hoverMessage.appendMarkdown(await getTooltipFooter());
 							}
 						}
 						else
 						{
-							console.log("no: label has no element in dtai, nothing else to do");
-							hoverMessage.appendMarkdown(`element not found for label: ${label}`);
+							console.log(`no: label has no element in dtai, nothing else to do: ${label}`);
+							hoverMessage.appendMarkdown(`Element not found: ${label}`);
+							hoverMessage.appendMarkdown(await getTooltipFooter());
 						}
 
 						let matches = textLine.text.match(/.(find_[^(]+)\(([^)]+)\)/);
@@ -178,12 +185,6 @@ class ProviderDecorations
 						}
 
 						decorOptions.push(decorOption);
-
-						console.log(label);
-					}
-					else
-					{
-						// line is not a locator, ignore
 					}
 				}
 			}

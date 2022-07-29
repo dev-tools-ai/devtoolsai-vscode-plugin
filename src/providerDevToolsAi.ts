@@ -1,9 +1,21 @@
 import { AxiosResponse } from "axios";
-import { getRequest } from "./utilities";
+import { getRequest, postRequest } from "./utilities";
+import * as vscode from 'vscode';
 
-class ProviderDevToolsAi
+interface IDisposable
+{
+	dispose(): void;
+}
+
+class ProviderDevToolsAi implements IDisposable
 {
 	private static readonly baseUrl: string = "https://smartdriver.dev-tools.ai";
+	private static _onServerUpdate: vscode.EventEmitter<void>;
+
+	constructor()
+	{
+		ProviderDevToolsAi._onServerUpdate = new vscode.EventEmitter<void>();
+	}
 
 	public static async isKeyValid(key: string): Promise<boolean>
 	{
@@ -47,8 +59,49 @@ class ProviderDevToolsAi
 		}
 		else
 		{
-			return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${label}`, config);
+			let elementSize = await ProviderDevToolsAi.getElementSize(key, label);
+			if (elementSize?.data && elementSize.status == 200)
+			{
+				height = elementSize.data.height;
+				width = elementSize.data.width;
+	
+				let area = height * width;
+				let areaMax = 250000;
+				
+				if (area > areaMax)
+				{
+					height = Math.floor(height * (Math.sqrt(areaMax / area)));
+					width = Math.floor(width * (Math.sqrt(areaMax / area)));
+				}
+
+				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${label}&width=${width}&height=${height}`, config);
+			}
+			else
+			{
+				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${label}`, config);
+			}
 		}
+	}
+
+	public static async getElementStatus(key: string, label: string): Promise<string>
+	{
+		let elementStatus = await getRequest(`${this.baseUrl}/element_status?api_key=${key}&label=${label}`);
+
+		if (elementStatus?.data && elementStatus.status == 200)
+		{
+			if (elementStatus.data[label])
+			{
+				return elementStatus.data[label].status_for_display;
+			}
+		}
+
+		return 'Status unavailable';
+	}
+
+	public static async deleteElement(key: string, label: string): Promise<void>
+	{
+		await postRequest(`${this.baseUrl}/delete_label`, { api_key: key, label: label });
+		ProviderDevToolsAi.serverUpdate();
 	}
 
 	public static getLabelingDashboardUrl(): string
@@ -74,6 +127,21 @@ class ProviderDevToolsAi
 	public static getVSCodeUrl(): string
 	{
 		return "https://marketplace.visualstudio.com/items?itemName=devtools-ai.devtools-ai";
+	}
+
+	public static serverUpdate()
+	{
+		ProviderDevToolsAi._onServerUpdate.fire();
+	}
+
+	public static get onServerUpdate(): vscode.Event<void>
+	{
+		return ProviderDevToolsAi._onServerUpdate.event;
+	}
+
+	public dispose(): void
+	{
+		ProviderDevToolsAi._onServerUpdate.dispose();
 	}
 }
 

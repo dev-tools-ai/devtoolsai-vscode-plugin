@@ -4,9 +4,19 @@ class ProviderLabel
 	{
 	}
 
-	private static getLabelPrefix(find: string): string
+	private static getLabelPrefix(): string
 	{
-  		return find.replace(/find_element_by|find_element/, "element_name_by");
+		return "element_name_by_locator_By";
+	}
+
+	private static getLabelType(find: string): string
+	{
+		return this.normalizeLabel(find.toLowerCase().replace(/find_element_by_|by.|appiumby./, ""));
+	}
+
+	private static getLabelValue(find: string): string
+	{
+		return this.normalizeLabel(find);
 	}
 
 	private static isLabelArg(arg: string): boolean
@@ -21,7 +31,7 @@ class ProviderLabel
 
 	private static normalizeLabel(label: string): string
 	{
-  		return label.replace(/^["'](.+(?=["']$))["']$/, '$1').replace(/\.+/g, '_');
+  		return label.replace(/^["'](.+(?=["']$))["']$/, '$1').replace(/\.+|\s+/g, '_');
 	}
 
 	public static getLabel(line: string, languageId: string): string | null
@@ -32,6 +42,7 @@ class ProviderLabel
 				return ProviderLabel.getPythonLabel(line);
 
 			case 'javascript': // cypress, playwright, webdriver.io
+			case 'typescript':
 				return ProviderLabel.getJavascriptLabel(line);
 
 			case 'java':
@@ -68,13 +79,8 @@ class ProviderLabel
 			  		{
 						return null;
 			  		}
-	  
-			  		if (args[0].startsWith("by.") || args[0].startsWith("appiumby."))
-			  		{
-						args[0] = args[0].split('.')[1];
-			  		}
-	  
-			  		return `${this.getLabelPrefix(matches[1])}_${this.normalizeLabel(args[0])}_${this.normalizeLabel(args[1])}`;
+
+					return `${this.getLabelPrefix()}_${this.getLabelType(args[0])}:_${this.getLabelValue(args[1])}`;
 	  
 				case 'find_element_by_accessibility_id':
 				case 'find_element_by_class_name':
@@ -94,8 +100,8 @@ class ProviderLabel
 			  		{
 						return null;
 			  		}
-	  
-			  		return `${this.getLabelPrefix(matches[1])}_${this.normalizeLabel(args[0])}`;
+
+					return `${this.getLabelPrefix()}_${this.getLabelType(matches[1])}:_${this.getLabelValue(args[0])}`;
 	  
 				case 'find_by_ai':
 			  		return this.normalizeLabel(args[0]);
