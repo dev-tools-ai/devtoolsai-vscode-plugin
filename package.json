@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/dev-tools-ai/devtoolsai-vscode-plugin"
   },
-  "version": "0.0.5",
+  "version": "0.0.6",
   "appInsightsId": "",
   "license": "MIT",
   "author": {
@@ -44,7 +44,9 @@
     "playwright"
   ],
   "activationEvents": [
-    "onLanguage:python"
+    "onLanguage:python",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
   ],
   "main": "./out/extension.js",
   "capabilities": {
@@ -67,14 +69,14 @@
         "command": "devtoolsai.getKeyFromUser",
         "title": "Get dev-tools.ai key from user"
       },
-	  {
-		"command": "devtoolsai.deleteElement",
-		"title": "Delete element"
-	  },
-	  {
-		"command": "devtoolsai.refreshElement",
-		"title": "Refresh element"
-	  }
+      {
+        "command": "devtoolsai.deleteElement",
+        "title": "Delete element"
+      },
+      {
+        "command": "devtoolsai.refreshElement",
+        "title": "Refresh element"
+      }
     ]
   },
   "scripts": {
