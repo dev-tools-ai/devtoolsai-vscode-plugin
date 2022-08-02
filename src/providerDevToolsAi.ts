@@ -46,7 +46,7 @@ class ProviderDevToolsAi implements IDisposable
 
 	public static async getElementSize(key: string, label: string): Promise<AxiosResponse<any, any> | undefined>
 	{
-		return await getRequest(`${this.baseUrl}/element_size?api_key=${key}&label=${label}`);
+		return await getRequest(`${this.baseUrl}/element_size?api_key=${key}&label=${encodeURIComponent(label)}`);
 	}
 
 	public static async getElementThumbnail(key: string, label: string, width?: number, height?: number): Promise<AxiosResponse<any, any> | undefined>
@@ -55,7 +55,7 @@ class ProviderDevToolsAi implements IDisposable
 
 		if (width && height)
 		{
-			return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${label}&width=${width}&height=${height}`, config);
+			return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}&width=${width}&height=${height}`, config);
 		}
 		else
 		{
@@ -74,18 +74,18 @@ class ProviderDevToolsAi implements IDisposable
 					width = Math.floor(width * (Math.sqrt(areaMax / area)));
 				}
 
-				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${label}&width=${width}&height=${height}`, config);
+				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}&width=${width}&height=${height}`, config);
 			}
 			else
 			{
-				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${label}`, config);
+				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}`, config);
 			}
 		}
 	}
 
 	public static async getElementStatus(key: string, label: string): Promise<string>
 	{
-		let elementStatus = await getRequest(`${this.baseUrl}/element_status?api_key=${key}&label=${label}`);
+		let elementStatus = await getRequest(`${this.baseUrl}/element_status?api_key=${key}&label=${encodeURIComponent(label)}`);
 
 		if (elementStatus?.data && elementStatus.status == 200)
 		{

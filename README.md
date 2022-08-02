@@ -29,5 +29,18 @@ Update your api key at any time by hovering over the `dev-tools.ai` icon in the 
 
 *Note this plugin stores and utilizes the api key at `~/.smartdriver (linux/mac)` or `%userprofile%\.smartdriver (windows)`.  It is recommended that you instantiate SmartDriver without the api key `(eg SmartDriver(driver))` wherein it will use the same key as this plugin.*
 
+### Support
+Current support:
+- Python (Selenium)
+- Cypress.io
+
+Future support:
+- Webdriver.io
+- Java (Selenium)
+- C# (Selenium)
+- JavaScript (Selenium)
+- Playwright
+- Ruby
+
 ### License
 Licensed under the [MIT](LICENSE) license.

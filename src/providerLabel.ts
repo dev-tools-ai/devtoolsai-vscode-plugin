@@ -4,36 +4,6 @@ class ProviderLabel
 	{
 	}
 
-	private static getLabelPrefix(): string
-	{
-		return "element_name_by_locator_By";
-	}
-
-	private static getLabelType(find: string): string
-	{
-		return this.normalizeLabel(find.toLowerCase().replace(/find_element_by_|by.|appiumby./, ""));
-	}
-
-	private static getLabelValue(find: string): string
-	{
-		return this.normalizeLabel(find);
-	}
-
-	private static isLabelArg(arg: string): boolean
-	{
-  		return arg.startsWith("element_name");
-	}
-
-	private static getLabelArgValue(arg: string): string
-	{
-  		return this.normalizeLabel(arg.split('=')[1]);
-	}
-
-	private static normalizeLabel(label: string): string
-	{
-  		return label.replace(/^["'](.+(?=["']$))["']$/, '$1').replace(/\.+|\s+/g, '_');
-	}
-
 	public static getLabel(line: string, languageId: string): string | null
 	{
 		switch (languageId)
@@ -61,6 +31,36 @@ class ProviderLabel
 
 	private static getPythonLabel(line: string): string | null
 	{
+		let normalizeLabel = (label: string): string =>
+		{
+			return label.replace(/^["'](.+(?=["']$))["']$/, '$1').replace(/\.+|\s+/g, '_');
+		}
+
+		let getLabelArgValue = (arg: string): string =>
+		{
+			return normalizeLabel(arg.split('=')[1]);
+		}
+
+		let getLabelValue = (find: string): string =>
+		{
+			return normalizeLabel(find);
+		}
+
+		let isLabelArg = (arg: string): boolean =>
+		{
+			return arg.startsWith("element_name");
+		}
+
+		let getLabelType = (find: string): string =>
+		{
+			return normalizeLabel(find.toLowerCase().replace(/find_element_by_|by.|appiumby./, ""));
+		}
+
+		let getLabelPrefix = (): string =>
+		{
+			return "element_name_by_locator_By";
+		}
+
 		let matches = line.match(/.(find_[^(]+)\(([^)]+)\)/);
 		if (matches !== null)
 		{
@@ -70,9 +70,9 @@ class ProviderLabel
 			switch(matches[1])
 		  	{
 				case 'find_element':
-			  		if (args.length == 3 && this.isLabelArg(args[2]))
+			  		if (args.length == 3 && isLabelArg(args[2]))
 			  		{
-						return this.getLabelArgValue(args[2]);
+						return getLabelArgValue(args[2]);
 			  		}
 	  
 			  		if (args.length < 2)
@@ -80,7 +80,7 @@ class ProviderLabel
 						return null;
 			  		}
 
-					return `${this.getLabelPrefix()}_${this.getLabelType(args[0])}:_${this.getLabelValue(args[1])}`;
+					return `${getLabelPrefix()}_${getLabelType(args[0])}:_${getLabelValue(args[1])}`;
 	  
 				case 'find_element_by_accessibility_id':
 				case 'find_element_by_class_name':
@@ -91,9 +91,9 @@ class ProviderLabel
 				case 'find_element_by_partial_link_text':
 				case 'find_element_by_tag_name':
 				case 'find_element_by_xpath':
-			  		if (args.length == 2 && this.isLabelArg(args[1]))
+			  		if (args.length == 2 && isLabelArg(args[1]))
 			  		{
-						return this.getLabelArgValue(args[1]);
+						return getLabelArgValue(args[1]);
 			  		}
 	  
 			  		if (args.length < 1)
@@ -101,10 +101,10 @@ class ProviderLabel
 						return null;
 			  		}
 
-					return `${this.getLabelPrefix()}_${this.getLabelType(matches[1])}:_${this.getLabelValue(args[0])}`;
+					return `${getLabelPrefix()}_${getLabelType(matches[1])}:_${getLabelValue(args[0])}`;
 	  
 				case 'find_by_ai':
-			  		return this.normalizeLabel(args[0]);
+			  		return normalizeLabel(args[0]);
 	  
 				default:
 			  		return null;
@@ -116,6 +116,19 @@ class ProviderLabel
 
 	private static getJavascriptLabel(line: string): string | null
 	{
+		let normalizeLabel = (label: string): string =>
+		{
+			return label.replace(/^["'](.+(?=["']$))["']$/, '$1');
+		}
+
+		let matches = line.match(/cy.(get|find|getByAI|findByAI)\(([^)]+)\)/);
+		if (matches !== null)
+		{
+			let args = matches[2].split(',');
+			args = args.map(arg => arg.trim());
+			return normalizeLabel(args[0]);
+		}
+	  
 		return null;
 	}
 

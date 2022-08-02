@@ -18,14 +18,16 @@ class ProviderDecorations
 	private context: vscode.ExtensionContext;
 	private activeEditor: vscode.TextEditor | undefined;
 
-	private readonly decorType: vscode.TextEditorDecorationType;
+	private readonly decorElementType: vscode.TextEditorDecorationType;
+	private readonly decorNoElementType: vscode.TextEditorDecorationType;
 
 	constructor(context: vscode.ExtensionContext)
 	{
 		this.context = context;
 		this.activeEditor = vscode.window.activeTextEditor;
 
-		this.decorType = this.getDecorType();
+		this.decorElementType = this.getDecorElementType();
+		this.decorNoElementType = this.getDecorNoElementType();
 
 		vscode.window.onDidChangeActiveTextEditor((editor) =>
 		{
@@ -57,7 +59,8 @@ class ProviderDecorations
 	{
 		vscode.window.visibleTextEditors.forEach(async (editor) =>
 		{
-			let decorOptions: vscode.DecorationOptions[] = [];
+			let decorElementOptions: vscode.DecorationOptions[] = [];
+			let decorNoElementOptions: vscode.DecorationOptions[] = [];
 
 			if (!isSupportedLanguage(editor.document.languageId))
 			{
@@ -72,6 +75,7 @@ class ProviderDecorations
 				{
 					let textLine = editor.document.lineAt(line);
 					let label = ProviderLabel.getLabel(textLine.text, editor.document.languageId);
+					let foundElement = false;
 
 					if (label)
 					{
@@ -155,6 +159,7 @@ class ProviderDecorations
 							if (cachedLabel)
 							{
 								//console.log("label is in cache, use it");
+								foundElement = true;
 
 								let buff = Buffer.from(cachedLabel.png, 'binary').toString('base64');
 								hoverMessage.appendMarkdown(`![Element Image](data:image/png;base64,${buff})`);
@@ -162,7 +167,6 @@ class ProviderDecorations
 							}
 							else
 							{
-
 								hoverMessage.appendMarkdown(`Element not found: ${label}`);
 								hoverMessage.appendMarkdown(await getTooltipFooter());
 							}
@@ -174,9 +178,32 @@ class ProviderDecorations
 							hoverMessage.appendMarkdown(await getTooltipFooter());
 						}
 
-						let matches = textLine.text.match(/.(find_[^(]+)\(([^)]+)\)/);
-						let startIndex = textLine.text.indexOf(matches[0]) + 1;
-						let endIndex = startIndex + 4;
+						let getMatches = (line, languageId): RegExpMatchArray =>
+						{
+							switch (languageId)
+							{
+								case 'python':
+									return line.match(/.(find_[^(]+)\(([^)]+)\)/);
+					
+								case 'javascript': // cypress, playwright, webdriver.io
+								case 'typescript':
+									return line.match(/cy.(get|find|getByAI|findByAI)\(([^)]+)\)/);
+					
+								case 'java':
+									return null;
+					
+								case 'csharp':
+									return null;
+					
+								case 'ruby':
+									return null;
+							}
+							
+						}
+
+						let matches = getMatches(textLine.text, editor.document.languageId);
+						let startIndex = textLine.text.indexOf(matches[1]);
+						let endIndex = startIndex + 3;
 
 						let decorOption: vscode.DecorationOptions =
 						{
@@ -184,23 +211,31 @@ class ProviderDecorations
 							range: new vscode.Range(line, startIndex, line, endIndex)
 						}
 
-						decorOptions.push(decorOption);
+						if (foundElement)
+						{
+							decorElementOptions.push(decorOption);
+						}
+						else
+						{
+							decorNoElementOptions.push(decorOption);
+						}
 					}
 				}
 			}
 
-			editor.setDecorations(this.decorType, decorOptions);
+			editor.setDecorations(this.decorElementType, decorElementOptions);
+			editor.setDecorations(this.decorNoElementType, decorNoElementOptions);
 		});
 	}
 
-	private getDecorType(): vscode.TextEditorDecorationType
+	private getDecorElementType(): vscode.TextEditorDecorationType
 	{
 		const decorType = vscode.window.createTextEditorDecorationType(
 		{
 			overviewRulerLane: vscode.OverviewRulerLane.Right,
 			light:
 			{
-				overviewRulerColor: 'rgba(0, 0, 0, 0.5)',
+				overviewRulerColor: '#42424299',
 				textDecoration: 'dotted underline 2px #424242',
 				before: {
 					contentIconPath: getLightIcon("dtai.svg")
@@ -208,10 +243,36 @@ class ProviderDecorations
 			},
 			dark:
 			{
-				overviewRulerColor: 'rgba(255, 255, 255, 0.5)',
+				overviewRulerColor: '#C5C5C599',
 				textDecoration: 'dotted underline 2px #C5C5C5',
 				before: {
 					contentIconPath: getDarkIcon("dtai.svg")
+				}
+			}
+		});
+
+		return decorType;
+	}
+
+	private getDecorNoElementType(): vscode.TextEditorDecorationType
+	{
+		const decorType = vscode.window.createTextEditorDecorationType(
+		{
+			overviewRulerLane: vscode.OverviewRulerLane.Right,
+			light:
+			{
+				overviewRulerColor: '#42424233',
+				textDecoration: 'dotted underline 2px #424242',
+				before: {
+					contentIconPath: getLightIcon("dtai2.svg")
+				}
+			},
+			dark:
+			{
+				overviewRulerColor: '#C5C5C533',
+				textDecoration: 'dotted underline 2px #C5C5C5',
+				before: {
+					contentIconPath: getDarkIcon("dtai2.svg")
 				}
 			}
 		});
