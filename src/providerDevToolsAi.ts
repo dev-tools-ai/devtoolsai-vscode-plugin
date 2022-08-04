@@ -66,7 +66,7 @@ class ProviderDevToolsAi implements IDisposable
 				width = elementSize.data.width;
 	
 				let area = height * width;
-				let areaMax = 250000;
+				let areaMax = 25000;
 				
 				if (area > areaMax)
 				{

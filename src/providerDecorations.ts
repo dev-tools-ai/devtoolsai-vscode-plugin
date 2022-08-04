@@ -178,16 +178,25 @@ class ProviderDecorations
 							hoverMessage.appendMarkdown(await getTooltipFooter());
 						}
 
-						let getMatches = (line, languageId): RegExpMatchArray =>
+						let getMatches = (line: string, languageId: string): RegExpMatchArray =>
 						{
 							switch (languageId)
 							{
 								case 'python':
-									return line.match(/.(find_[^(]+)\(([^)]+)\)/);
+									return line.match(/\.(find_[^(]+)\(([^)]+)\)/);
 					
 								case 'javascript': // cypress, playwright, webdriver.io
 								case 'typescript':
-									return line.match(/cy.(get|find|getByAI|findByAI)\(([^)]+)\)/);
+									let cypressMatches = line.match(/cy\.(get|find|getByAI|findByAI)\(([^)]+)\)/);
+									if (cypressMatches)
+									{
+										return cypressMatches;
+									}
+									else
+									{
+										let wdioMatches = line.match(/browser\.(\$|findByAI\$)\(([^)]+)\)/);
+										return wdioMatches;
+									}
 					
 								case 'java':
 									return null;
@@ -203,7 +212,7 @@ class ProviderDecorations
 
 						let matches = getMatches(textLine.text, editor.document.languageId);
 						let startIndex = textLine.text.indexOf(matches[1]);
-						let endIndex = startIndex + 3;
+						let endIndex = startIndex + 2;
 
 						let decorOption: vscode.DecorationOptions =
 						{

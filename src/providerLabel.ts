@@ -61,7 +61,7 @@ class ProviderLabel
 			return "element_name_by_locator_By";
 		}
 
-		let matches = line.match(/.(find_[^(]+)\(([^)]+)\)/);
+		let matches = line.match(/\.(find_[^(]+)\(([^)]+)\)/);
 		if (matches !== null)
 		{
 			let args = matches[2].split(',');
@@ -121,12 +121,36 @@ class ProviderLabel
 			return label.replace(/^["'](.+(?=["']$))["']$/, '$1');
 		}
 
-		let matches = line.match(/cy.(get|find|getByAI|findByAI)\(([^)]+)\)/);
-		if (matches !== null)
+		let cypressMatches = line.match(/cy\.(get|find|getByAI|findByAI)\(([^)]+)\)/);
+		if (cypressMatches !== null)
 		{
-			let args = matches[2].split(',');
+			let args = cypressMatches[2].split(',');
 			args = args.map(arg => arg.trim());
 			return normalizeLabel(args[0]);
+		}
+
+		let getWdioLabelPrefix = (): string =>
+		{
+			return "wdio_by_selector";
+		}
+
+		let wdioMatches = line.match(/browser\.(\$|findByAI\$)\(([^)]+)\)/);
+		if (wdioMatches !== null)
+		{
+			let args = wdioMatches[2].split(',');
+			args = args.map(arg => arg.trim());
+
+			switch(wdioMatches[1])
+			{
+				case '$':
+					return `${getWdioLabelPrefix()}_${normalizeLabel(args[0])}`;
+
+				case 'findByAI$':
+					return normalizeLabel(args[0]);
+
+				default:
+					return null;
+			}
 		}
 	  
 		return null;
