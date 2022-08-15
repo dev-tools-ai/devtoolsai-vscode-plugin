@@ -10,6 +10,7 @@ interface cachedLabel
 	label: string;
 	png: string;
 	updated_at: number;
+	version?: string;
 }
 
 class ProviderDecorations
@@ -17,6 +18,7 @@ class ProviderDecorations
 	private timeout: NodeJS.Timeout | undefined;
 	private context: vscode.ExtensionContext;
 	private activeEditor: vscode.TextEditor | undefined;
+	private version: string;
 
 	private readonly decorElementType: vscode.TextEditorDecorationType;
 	private readonly decorNoElementType: vscode.TextEditorDecorationType;
@@ -25,6 +27,7 @@ class ProviderDecorations
 	{
 		this.context = context;
 		this.activeEditor = vscode.window.activeTextEditor;
+		this.version = context.extension.packageJSON.version;
 
 		this.decorElementType = this.getDecorElementType();
 		this.decorNoElementType = this.getDecorNoElementType();
@@ -112,9 +115,13 @@ class ProviderDecorations
 							{
 								//console.log("yes: label is in cache, is it up to date");
 								if (elementSize?.data?.updated_at &&
-									cachedLabel.updated_at == elementSize.data.updated_at)
+									cachedLabel.updated_at == elementSize.data.updated_at &&
+									cachedLabel?.version &&
+									cachedLabel?.version == this.version)
 								{
 									console.log(`yes: cached label is up to date, use cache`);
+									console.log(`this.version: ${this.version}`);
+									console.log(`cachedLabel.version: ${cachedLabel.version}`);
 								}
 								else
 								{
@@ -126,7 +133,8 @@ class ProviderDecorations
 										{ 
 											label: label,
 											png:  elementThumbnail.data,
-											updated_at: elementSize.data.updated_at
+											updated_at: elementSize.data.updated_at,
+											version: this.version
 										}
 
 										ServiceLocalStorage.instance.setValue<cachedLabel>(`${key}${label}`, cl);
@@ -134,7 +142,7 @@ class ProviderDecorations
 									}
 									else
 									{
-										console.log(`failed to get image, use cache: ${label}`);
+										//console.log(`failed to get image, use cache: ${label}`);
 									}
 								}
 							}
@@ -148,7 +156,8 @@ class ProviderDecorations
 									{ 
 										label: label,
 										png:  elementThumbnail.data,
-										updated_at: elementSize.data.updated_at
+										updated_at: elementSize.data.updated_at,
+										version: this.version
 									}
 
 									ServiceLocalStorage.instance.setValue<cachedLabel>(`${key}${label}`, cl);
@@ -173,7 +182,7 @@ class ProviderDecorations
 						}
 						else
 						{
-							console.log(`no: label has no element in dtai, nothing else to do: ${label}`);
+							//console.log(`no: label has no element in dtai, nothing else to do: ${label}`);
 							hoverMessage.appendMarkdown(`Element not found: ${label}`);
 							hoverMessage.appendMarkdown(await getTooltipFooter());
 						}
@@ -183,23 +192,23 @@ class ProviderDecorations
 							switch (languageId)
 							{
 								case 'python':
-									return line.match(/\.(find_[^(]+)\(([^)]+)\)/);
+									return line.match(/\.(find_[^(]+)(.+)$/);
 					
 								case 'javascript': // cypress, playwright, webdriver.io
 								case 'typescript':
-									let cypressMatches = line.match(/cy\.(get|find|getByAI|findByAI)\(([^)]+)\)/);
+									let cypressMatches = line.match(/cy\.(getByAI|findByAI|get|find(?=[(]))(.+)$/);
 									if (cypressMatches)
 									{
 										return cypressMatches;
 									}
 									else
 									{
-										let wdioMatches = line.match(/browser\.(\$|findByAI\$)\(([^)]+)\)/);
+										let wdioMatches = line.match(/browser\.(findByAI\$|\$(?=[(]))(.+)/);
 										return wdioMatches;
 									}
 					
 								case 'java':
-									return null;
+									return line.match(/\.(find[^(]+)(.+)$/);
 					
 								case 'csharp':
 									return null;
@@ -207,7 +216,6 @@ class ProviderDecorations
 								case 'ruby':
 									return null;
 							}
-							
 						}
 
 						let matches = getMatches(textLine.text, editor.document.languageId);

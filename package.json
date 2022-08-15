@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/dev-tools-ai/devtoolsai-vscode-plugin"
   },
-  "version": "0.0.7",
+  "version": "0.1.0",
   "appInsightsId": "",
   "license": "MIT",
   "author": {
@@ -44,6 +44,7 @@
     "playwright"
   ],
   "activationEvents": [
+    "onLanguage:java",
     "onLanguage:python",
     "onLanguage:javascript",
     "onLanguage:typescript"
@@ -103,6 +104,7 @@
   "dependencies": {
     "@vscode/extension-telemetry": "^0.4.9",
     "open": "^8.2.0",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "jimp": "0.15.0"
   }
 }

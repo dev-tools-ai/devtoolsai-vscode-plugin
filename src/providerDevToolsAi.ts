@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { getRequest, postRequest } from "./utilities";
+import { getRequest, postRequest, resizePng, scaleWidthHeight } from "./utilities";
 import * as vscode from 'vscode';
 
 interface IDisposable
@@ -51,34 +51,36 @@ class ProviderDevToolsAi implements IDisposable
 
 	public static async getElementThumbnail(key: string, label: string, width?: number, height?: number): Promise<AxiosResponse<any, any> | undefined>
 	{
-		let config = { responseType: 'arraybuffer' };
+		let elementThumbnail = await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}`, { responseType: 'arraybuffer' });
+		if (elementThumbnail?.data && elementThumbnail.status == 200)
+		{
+			if (width && height)
+			{	
+				elementThumbnail.data = await resizePng(elementThumbnail.data, width, height);
+				return elementThumbnail;
+			}
 
-		if (width && height)
-		{
-			return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}&width=${width}&height=${height}`, config);
-		}
-		else
-		{
 			let elementSize = await ProviderDevToolsAi.getElementSize(key, label);
 			if (elementSize?.data && elementSize.status == 200)
 			{
-				height = elementSize.data.height;
-				width = elementSize.data.width;
-	
-				let area = height * width;
-				let areaMax = 25000;
-				
-				if (area > areaMax)
+				let swh = scaleWidthHeight(elementSize.data.width, elementSize.data.height, 40000);
+				let data = await resizePng(elementThumbnail.data, swh.width, swh.height);
+
+				// image rendering in vscode hovers seem to fail when ${elementThumbnail.data.length} > ~70k
+				// 74953 == footer markdown torched
+				// >= 75615 == image + footer markdowns torched
+				if (data.length > 65536)
 				{
-					height = Math.floor(height * (Math.sqrt(areaMax / area)));
-					width = Math.floor(width * (Math.sqrt(areaMax / area)));
+					let swh = scaleWidthHeight(elementSize.data.width, elementSize.data.height, 25000);
+					data = await resizePng(elementThumbnail.data, swh.width, swh.height);
 				}
 
-				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}&width=${width}&height=${height}`, config);
+				elementThumbnail.data = data;
+				return elementThumbnail;
 			}
 			else
 			{
-				return await getRequest(`${this.baseUrl}/element_thumbnail?api_key=${key}&label=${encodeURIComponent(label)}`, config);
+				return elementThumbnail;
 			}
 		}
 	}
@@ -111,7 +113,7 @@ class ProviderDevToolsAi implements IDisposable
 
 	public static getLabelingElementUrl(label: string): string
 	{
-		return `${this.baseUrl}/label/labeler?label=${label}`;
+		return `${this.baseUrl}/label/labeler?label=${encodeURIComponent(label)}`;
 	}
 
 	public static getGetStartedUrl(): string
