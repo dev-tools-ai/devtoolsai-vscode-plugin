@@ -1,6 +1,7 @@
 import path = require("path");
 import open = require('open');
 import axios, { AxiosResponse } from 'axios';
+let Jimp = require('jimp');
 
 
 function isSupportedLanguage(langId: string): boolean
@@ -64,6 +65,31 @@ async function postRequest(url: string, data: object, config: object = {}): Prom
 	}
 }
 
+async function resizePng(data: any, width: number, height: number): Promise<any | undefined>
+{
+	try
+	{
+		let image = await Jimp.read(data);
+		return await image.resize(width, height).quality(100).getBufferAsync(Jimp.MIME_PNG);
+	}
+	catch (e)
+	{
+		return undefined;
+	}
+}
+
+function scaleWidthHeight(width: number, height: number, areaMax: number): { width: number, height: number }
+{
+	let area = height * width;
+	if (area > areaMax)
+	{
+		height = Math.floor(height * (Math.sqrt(areaMax / area)));
+		width = Math.floor(width * (Math.sqrt(areaMax / area)));
+	}
+
+	return { width: width, height: height };
+}
+
 export
 {
 	isSupportedLanguage,
@@ -71,5 +97,7 @@ export
 	getDarkIcon,
 	openExternalUrl,
 	getRequest,
-	postRequest
+	postRequest,
+	resizePng,
+	scaleWidthHeight
 }
