@@ -212,6 +212,40 @@ class ProviderLabel
 					return null;
 			}
 		}
+
+		let getPwLabelPrefix = (): string =>
+		{
+			return "pw_by_selector";
+		}
+
+		let pwMatches = line.match(/\w+\.(findByAI|\$(?=[(]))(.+)/);
+		if (pwMatches)
+		{
+			let closingParen = ProviderLabel.getClosingParenIndex(pwMatches[2], 0);
+			if (!closingParen)
+			{
+				return null;
+			}
+
+			let subLine = pwMatches[2].substring(1, closingParen);
+			let subMatches = subLine.match(/([^,]+)(?:\s*,\s*(.+))?/);
+			if (!subMatches)
+			{
+				return null;
+			}
+
+			switch(pwMatches[1])
+			{
+				case '$':
+					return `${getPwLabelPrefix()}_${normalizeLabel(subMatches[1])}`;
+
+				case 'findByAI':
+					return normalizeLabel(subMatches[1]);
+
+				default:
+					return null;
+			}
+		}
 	  
 		return null;
 	}

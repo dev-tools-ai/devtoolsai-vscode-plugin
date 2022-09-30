@@ -22,6 +22,7 @@ class ProviderDecorations
 
 	private readonly decorElementType: vscode.TextEditorDecorationType;
 	private readonly decorNoElementType: vscode.TextEditorDecorationType;
+	private readonly decorHoverType: vscode.TextEditorDecorationType;
 
 	constructor(context: vscode.ExtensionContext)
 	{
@@ -31,6 +32,7 @@ class ProviderDecorations
 
 		this.decorElementType = this.getDecorElementType();
 		this.decorNoElementType = this.getDecorNoElementType();
+		this.decorHoverType = this.getDecorHoverType();
 
 		vscode.window.onDidChangeActiveTextEditor((editor) =>
 		{
@@ -64,6 +66,7 @@ class ProviderDecorations
 		{
 			let decorElementOptions: vscode.DecorationOptions[] = [];
 			let decorNoElementOptions: vscode.DecorationOptions[] = [];
+			let decorHoverOptions: vscode.DecorationOptions[] = [];
 
 			if (!isSupportedLanguage(editor.document.languageId))
 			{
@@ -201,11 +204,20 @@ class ProviderDecorations
 									{
 										return cypressMatches;
 									}
-									else
+
+									let wdioMatches = line.match(/browser\.(findByAI\$|\$(?=[(]))(.+)/);
+									if (wdioMatches)
 									{
-										let wdioMatches = line.match(/browser\.(findByAI\$|\$(?=[(]))(.+)/);
 										return wdioMatches;
 									}
+
+									let pwMatches = line.match(/\w+\.(findByAI|\$(?=[(]))(.+)/);
+									if (pwMatches)
+									{
+										return pwMatches;
+									}
+
+									return null;
 					
 								case 'java':
 									return line.match(/\.(find[^(]+)(.+)$/);
@@ -220,17 +232,25 @@ class ProviderDecorations
 
 						let matches = getMatches(textLine.text, editor.document.languageId);
 						let startIndex = textLine.text.indexOf(matches[1]);
-						let endIndex = startIndex + 2;
+						let endIndex = startIndex;
 
 						let decorOption: vscode.DecorationOptions =
 						{
-							hoverMessage: hoverMessage,
-							range: new vscode.Range(line, startIndex, line, endIndex)
+							range: new vscode.Range(line, startIndex, line, endIndex + 1)
 						}
+
+						let decorHoverOption: vscode.DecorationOptions =
+						{
+							hoverMessage: hoverMessage,
+							range: new vscode.Range(line, startIndex - 1, line, endIndex + 2)
+						}
+
+						decorHoverOptions.push(decorHoverOption);
 
 						if (foundElement)
 						{
 							decorElementOptions.push(decorOption);
+
 						}
 						else
 						{
@@ -242,6 +262,7 @@ class ProviderDecorations
 
 			editor.setDecorations(this.decorElementType, decorElementOptions);
 			editor.setDecorations(this.decorNoElementType, decorNoElementOptions);
+			editor.setDecorations(this.decorHoverType, decorHoverOptions);
 		});
 	}
 
@@ -253,7 +274,7 @@ class ProviderDecorations
 			light:
 			{
 				overviewRulerColor: '#42424299',
-				textDecoration: 'dotted underline 2px #424242',
+				textDecoration: 'dotted underline .5mm #424242;text-underline-position:under',
 				before: {
 					contentIconPath: getLightIcon("dtai.svg")
 				}
@@ -261,7 +282,7 @@ class ProviderDecorations
 			dark:
 			{
 				overviewRulerColor: '#C5C5C599',
-				textDecoration: 'dotted underline 2px #C5C5C5',
+				textDecoration: 'dotted underline .5mm #C5C5C5;text-underline-position:under',
 				before: {
 					contentIconPath: getDarkIcon("dtai.svg")
 				}
@@ -279,7 +300,7 @@ class ProviderDecorations
 			light:
 			{
 				overviewRulerColor: '#42424233',
-				textDecoration: 'dotted underline 2px #424242',
+				textDecoration: 'dotted underline .5mm #424242;text-underline-position:under',
 				before: {
 					contentIconPath: getLightIcon("dtai2.svg")
 				}
@@ -287,11 +308,20 @@ class ProviderDecorations
 			dark:
 			{
 				overviewRulerColor: '#C5C5C533',
-				textDecoration: 'dotted underline 2px #C5C5C5',
+				textDecoration: 'dotted underline .5mm #C5C5C5;text-underline-position:under',
 				before: {
 					contentIconPath: getDarkIcon("dtai2.svg")
 				}
 			}
+		});
+
+		return decorType;
+	}
+
+	private getDecorHoverType(): vscode.TextEditorDecorationType
+	{
+		const decorType = vscode.window.createTextEditorDecorationType(
+		{
 		});
 
 		return decorType;

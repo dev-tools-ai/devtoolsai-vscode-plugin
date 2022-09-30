@@ -35,11 +35,11 @@ Current support:
 - Java (Selenium)
 - Cypress.io
 - Webdriver.io
+- Playwright
 
 Future support:
 - C# (Selenium)
 - JavaScript (Selenium)
-- Playwright
 - Ruby
 
 ### License
